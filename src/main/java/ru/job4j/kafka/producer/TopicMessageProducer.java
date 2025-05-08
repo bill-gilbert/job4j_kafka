@@ -37,8 +37,9 @@ public class TopicMessageProducer {
                         logger.error("Error while sending message", e);
                         return;
                     }
-                    logger.info("Key = {}, value = {},  partition {}, offset {}",
-                            record.key(), record.value(), metadata.partition(), metadata.offset());
+                    logger.info("Message sent to topic {}, partition {}, offset {}",
+                            metadata.topic(), metadata.partition(), metadata.offset());
+
                 });
 
                 Thread.sleep(1000);
