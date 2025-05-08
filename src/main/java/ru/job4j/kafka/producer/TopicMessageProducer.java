@@ -7,14 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Простой продюсер
  *
  * @author Павел Глухов
  */
-public class SimpleProducer {
-    private static final Logger logger = LoggerFactory.getLogger(SimpleProducer.class);
+public class TopicMessageProducer {
+    private static final Logger logger = LoggerFactory.getLogger(TopicMessageProducer.class);
 
     public static void main(String[] args) throws InterruptedException {
         var props = new Properties();
@@ -23,26 +24,26 @@ public class SimpleProducer {
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-            var topic = "demo-topic";
-            var key = "key1"; // Что-бы сообщения попадало в одну партицию и у нас была очередность
-            for (int i = 1; i <= 10000; i++) {
+            var topic = "message";
+            String key = null; // Что-бы сообщения попадало в одну партицию и у нас была очередность
+            for (int i = 1; i <= 1000; i++) {
                 var value = "Message number " + i;
+                key = i % 5 == 0 ? null : String.valueOf(ThreadLocalRandom.current().nextInt(1, 4));
                 var record = new ProducerRecord<>(topic, key, value);
 
                 // Асинхронная отправка сообщения с коллбеком
                 producer.send(record, (RecordMetadata metadata, Exception e) -> {
                     if (e != null) {
-                      logger.error("Error while sending message", e);
-                      return;
+                        logger.error("Error while sending message", e);
+                        return;
                     }
-
                     logger.info("Message sent to topic {}, partition {}, offset {}",
                             metadata.topic(), metadata.partition(), metadata.offset());
+
                 });
 
                 Thread.sleep(1000);
             }
-
 
             producer.flush();
         }
