@@ -47,7 +47,7 @@ public class ReqReply {
     }
 
     public static void main(String[] args) throws Exception {
-        ReqReply reply = new ReqReply(10);
+        ReqReply reply = new ReqReply(1000);
         FutureTask<String> task = new FutureTask<>(new Callable<>() {
             @Override
             public String call() {
