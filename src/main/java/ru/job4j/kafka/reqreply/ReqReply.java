@@ -3,7 +3,7 @@ package ru.job4j.kafka.reqreply;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Callable;
+import java.util.UUID;
 import java.util.concurrent.FutureTask;
 
 /**
@@ -24,7 +24,7 @@ public class ReqReply {
         this.timeout = timeout;
     }
 
-    public String send() {
+    public String send(UUID uuid) {
         synchronized (monitor) {
             if (!received) {
                 try {
@@ -48,12 +48,7 @@ public class ReqReply {
 
     public static void main(String[] args) throws Exception {
         ReqReply reply = new ReqReply(1000);
-        FutureTask<String> task = new FutureTask<>(new Callable<>() {
-            @Override
-            public String call() {
-                return reply.send();
-            }
-        });
+        FutureTask<String> task = new FutureTask<>(() -> reply.send(UUID.randomUUID()));
 
         new Thread(task).start();
 
