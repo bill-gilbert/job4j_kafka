@@ -1,5 +1,6 @@
+package ru.job4j.kafka.reqreply.v2;
+
 import org.junit.jupiter.api.Test;
-import ru.job4j.kafka.reqreply.v2.ReqReply;
 
 import java.util.UUID;
 import java.util.concurrent.FutureTask;
