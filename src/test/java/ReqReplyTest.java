@@ -1,17 +1,18 @@
 import org.junit.jupiter.api.Test;
 import ru.job4j.kafka.reqreply.v2.ReqReply;
 
+import java.util.UUID;
 import java.util.concurrent.FutureTask;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ReqReplyTest {
+class ReqReplyTest {
 
     @Test
-    public void testSendAndReceiveSameCorrelationId() throws Exception {
+    void testSendAndReceiveSameCorrelationId() throws Exception {
         ReqReply reply = new ReqReply(1000);
-        String correlationId = "1";
+        UUID correlationId = UUID.randomUUID();
 
         FutureTask<String> task = new FutureTask<>(() -> reply.send(correlationId));
         new Thread(task).start();
@@ -24,9 +25,9 @@ public class ReqReplyTest {
     }
 
     @Test
-    public void testTimeout() throws Exception {
+    void testTimeout() throws Exception {
         ReqReply reply = new ReqReply(300);
-        String correlationId = "1";
+        UUID correlationId = UUID.randomUUID();
 
         FutureTask<String> task = new FutureTask<>(() -> reply.send(correlationId));
         new Thread(task).start();
@@ -36,10 +37,10 @@ public class ReqReplyTest {
     }
 
     @Test
-    public void testSendReceiveDifferentCorrelationIds() throws Exception {
+    void testSendReceiveDifferentCorrelationIds() throws Exception {
         ReqReply reply = new ReqReply(300);
-        String sendId = "1";
-        String receiveId = "2";
+        UUID sendId = UUID.randomUUID();
+        UUID receiveId = UUID.randomUUID();
 
         FutureTask<String> task = new FutureTask<>(() -> reply.send(sendId));
         new Thread(task).start();

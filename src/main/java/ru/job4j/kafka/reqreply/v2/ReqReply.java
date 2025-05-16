@@ -3,20 +3,25 @@ package ru.job4j.kafka.reqreply.v2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * попытка решить 4-ое задание
+ *
+ * @author Павел Глухов
+ */
 public class ReqReply {
     private static final Logger logger = LoggerFactory.getLogger(ReqReply.class);
-
     private final long timeout;
-    private final ConcurrentMap<String, Entry> responses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, Entry> responses = new ConcurrentHashMap<>();
 
     public ReqReply(long timeout) {
         this.timeout = timeout;
     }
 
-    public String send(String correlationId) {
+    public String send(UUID correlationId) {
         Entry entry = responses.computeIfAbsent(correlationId, id -> new Entry());
 
         synchronized (entry.monitor) {
@@ -37,7 +42,7 @@ public class ReqReply {
         }
     }
 
-    public void receive(String correlationId, String message) {
+    public void receive(UUID correlationId, String message) {
         Entry entry = responses.computeIfAbsent(correlationId, id -> new Entry());
 
         synchronized (entry.monitor) {

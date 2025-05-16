@@ -5,7 +5,7 @@ import java.util.concurrent.FutureTask;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String correlationId = UUID.randomUUID().toString();
+        UUID correlationId = UUID.randomUUID();
         ReqReply reply = new ReqReply(1000);
 
         FutureTask<String> task = new FutureTask<>(() -> reply.send(correlationId));
