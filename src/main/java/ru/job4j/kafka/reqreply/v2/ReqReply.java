@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * попытка решить 4-ое задание
@@ -15,27 +17,29 @@ import java.util.concurrent.ConcurrentMap;
 public class ReqReply {
     private static final Logger logger = LoggerFactory.getLogger(ReqReply.class);
     private final long timeout;
-    private final ConcurrentMap<UUID, Entry> responses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, ReplyLock> responses = new ConcurrentHashMap<>();
 
     public ReqReply(long timeout) {
         this.timeout = timeout;
     }
 
     public String send(UUID correlationId) {
-        Entry entry = responses.computeIfAbsent(correlationId, id -> new Entry());
+        ReplyLock replyLock = responses.computeIfAbsent(correlationId, id -> new ReplyLock());
 
-        synchronized (entry.monitor) {
-            if (!entry.received) {
+        synchronized (replyLock.monitor) {
+            if (!replyLock.received.get()) {
                 try {
-                    entry.monitor.wait(timeout);
+                    replyLock.monitor.wait(timeout);
                 } catch (InterruptedException e) {
+                    responses.remove(correlationId);
                     Thread.currentThread().interrupt();
                     return "Interrupted while waiting";
                 }
             }
 
-            if (entry.received) {
-                return entry.message;
+            responses.remove(correlationId);
+            if (replyLock.received.get()) {
+                return replyLock.message.get();
             } else {
                 return "Happened timeout " + timeout;
             }
@@ -43,18 +47,18 @@ public class ReqReply {
     }
 
     public void receive(UUID correlationId, String message) {
-        Entry entry = responses.computeIfAbsent(correlationId, id -> new Entry());
+        ReplyLock replyLock = responses.computeIfAbsent(correlationId, id -> new ReplyLock());
 
-        synchronized (entry.monitor) {
-            entry.received = true;
-            entry.message = message;
-            entry.monitor.notifyAll();
+        synchronized (replyLock.monitor) {
+            replyLock.received.set(true);
+            replyLock.message.set(message);
+            replyLock.monitor.notifyAll();
         }
     }
 
-    private static class Entry {
-        final Object monitor = new Object();
-        volatile boolean received = false;
-        volatile String message = "";
+    public record ReplyLock(Object monitor, AtomicBoolean received, AtomicReference<String> message) {
+        public ReplyLock() {
+            this(new Object(), new AtomicBoolean(false), new AtomicReference<>(""));
+        }
     }
 }
